@@ -25,7 +25,7 @@ def load_asc_data(uploaded_file):
     return pd.DataFrame(data, columns=["Wavenumber (cm-1)", "Transmittance (%)"])
 
 # --- Streamlit UI ---
-st.title("FTIR Spectrum Dashboard")
+st.title("FTIR Analyser")
 
 uploaded_files = st.file_uploader("Upload one or more ASC files", type=["asc"], accept_multiple_files=True)
 
