@@ -73,10 +73,20 @@ if uploaded_files:
 
         fig.update_layout(
             title=dict(text=f"<b>{chart_title}</b>", font=dict(size=title_size, family=font_family, color="black")),
-            xaxis=dict(title=dict(text="<b>Wavenumber (cm⁻¹)</b>", font=dict(size=axis_title_size, family=font_family, color="black")),
-                        autorange=False, range=[x_min, x_max], tickfont=dict(size=tick_size, family=font_family, color="black"), showgrid=show_grid),
-            yaxis=dict(title=dict(text="<b>Transmittance (%)</b>", font=dict(size=axis_title_size, family=font_family, color="black")),
-                        autorange=False, range=[y_min, y_max], tickfont=dict(size=tick_size, family=font_family, color="black"), showgrid=show_grid),
+            xaxis=dict(
+                title=dict(text="<b>Wavenumber (cm⁻¹)</b>", font=dict(size=axis_title_size, family=font_family, color="black")),
+                autorange="reversed",   # ✅ FTIR convention
+                range=[x_max, x_min],   # ✅ invert range explicitly
+                tickfont=dict(size=tick_size, family=font_family, color="black"),
+                showgrid=show_grid
+            ),
+            yaxis=dict(
+                title=dict(text="<b>Transmittance (%)</b>", font=dict(size=axis_title_size, family=font_family, color="black")),
+                autorange=False,
+                range=[y_min, y_max],
+                tickfont=dict(size=tick_size, family=font_family, color="black"),
+                showgrid=show_grid
+            ),
             legend=dict(font=dict(size=tick_size, family=font_family, color="black"))
         )
 
@@ -103,10 +113,20 @@ if uploaded_files:
 
             fig.update_layout(
                 title=dict(text=f"<b>{chart_title} - {custom_name}</b>", font=dict(size=title_size, family=font_family, color="black")),
-                xaxis=dict(title=dict(text="<b>Wavenumber (cm⁻¹)</b>", font=dict(size=axis_title_size, family=font_family, color="black")),
-                            autorange=False, range=[x_min, x_max], tickfont=dict(size=tick_size, family=font_family, color="black"), showgrid=show_grid),
-                yaxis=dict(title=dict(text="<b>Transmittance (%)</b>", font=dict(size=axis_title_size, family=font_family, color="black")),
-                            autorange=False, range=[y_min, y_max], tickfont=dict(size=tick_size, family=font_family, color="black"), showgrid=show_grid),
+                xaxis=dict(
+                    title=dict(text="<b>Wavenumber (cm⁻¹)</b>", font=dict(size=axis_title_size, family=font_family, color="black")),
+                    autorange="reversed",   # ✅ FTIR convention
+                    range=[x_max, x_min],
+                    tickfont=dict(size=tick_size, family=font_family, color="black"),
+                    showgrid=show_grid
+                ),
+                yaxis=dict(
+                    title=dict(text="<b>Transmittance (%)</b>", font=dict(size=axis_title_size, family=font_family, color="black")),
+                    autorange=False,
+                    range=[y_min, y_max],
+                    tickfont=dict(size=tick_size, family=font_family, color="black"),
+                    showgrid=show_grid
+                ),
                 legend=dict(font=dict(size=tick_size, family=font_family, color="black"))
             )
 
