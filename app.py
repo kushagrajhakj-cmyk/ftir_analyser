@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
+import matplotlib.pyplot as plt
 
 # --- Function to load ASC data ---
 def load_asc_data(uploaded_file):
@@ -47,7 +48,7 @@ y_min = st.sidebar.number_input("Y-axis Min (Transmittance)", value=0.0)
 y_max = st.sidebar.number_input("Y-axis Max (Transmittance)", value=100.0)
 
 # Toggle for overlapped vs separate plots
-plot_mode = st.sidebar.radio("Plot Mode", ["Overlapped", "Separate"])
+plot_mode = st.sidebar.radio("Plot Mode", ["Overlapped", "Separate", "Stacked (Matplotlib)"])
 
 st.sidebar.markdown("---")
 st.sidebar.markdown("**Developed by Kushagra, Petchem Lab**")
@@ -56,8 +57,8 @@ st.sidebar.markdown("**Developed by Kushagra, Petchem Lab**")
 if uploaded_files:
     chart_title = st.text_input("Enter chart title", value="FTIR Spectrum")
 
+    # Overlapped Plotly plot
     if plot_mode == "Overlapped":
-        # Combined overlapped plot
         fig = go.Figure()
         for file in uploaded_files:
             default_name = file.name
@@ -75,8 +76,8 @@ if uploaded_files:
             title=dict(text=f"<b>{chart_title}</b>", font=dict(size=title_size, family=font_family, color="black")),
             xaxis=dict(
                 title=dict(text="<b>Wavenumber (cm⁻¹)</b>", font=dict(size=axis_title_size, family=font_family, color="black")),
-                autorange="reversed",   # ✅ FTIR convention
-                range=[x_max, x_min],   # ✅ invert range explicitly
+                autorange="reversed",
+                range=[x_max, x_min],
                 tickfont=dict(size=tick_size, family=font_family, color="black"),
                 showgrid=show_grid
             ),
@@ -92,13 +93,8 @@ if uploaded_files:
 
         st.plotly_chart(fig, use_container_width=True)
 
-        html_file = "ftir_overlapped.html"
-        fig.write_html(html_file)
-        with open(html_file, "rb") as f:
-            st.download_button("Download Interactive HTML", f, file_name=html_file, mime="text/html")
-
-    else:
-        # Separate plots for each file
+    # Separate Plotly plots
+    elif plot_mode == "Separate":
         for file in uploaded_files:
             custom_name = st.text_input(f"Name for {file.name}", value=file.name)
             df = load_asc_data(file)
@@ -115,7 +111,7 @@ if uploaded_files:
                 title=dict(text=f"<b>{chart_title} - {custom_name}</b>", font=dict(size=title_size, family=font_family, color="black")),
                 xaxis=dict(
                     title=dict(text="<b>Wavenumber (cm⁻¹)</b>", font=dict(size=axis_title_size, family=font_family, color="black")),
-                    autorange="reversed",   # ✅ FTIR convention
+                    autorange="reversed",
                     range=[x_max, x_min],
                     tickfont=dict(size=tick_size, family=font_family, color="black"),
                     showgrid=show_grid
@@ -132,7 +128,34 @@ if uploaded_files:
 
             st.plotly_chart(fig, use_container_width=True)
 
-            html_file = f"ftir_{custom_name.replace(' ', '_')}.html"
-            fig.write_html(html_file)
-            with open(html_file, "rb") as f:
-                st.download_button(f"Download {custom_name} HTML", f, file_name=html_file, mime="text/html")
+    # Matplotlib stacked plot
+    else:
+        st.sidebar.header("Stacked Plot Settings")
+        offset_value = st.sidebar.number_input("Vertical Offset (%)", value=5.0, step=1.0)
+        sequence = st.sidebar.multiselect(
+            "Select plotting sequence",
+            options=[f.name for f in uploaded_files],
+            default=[f.name for f in uploaded_files]
+        )
+
+        color_map = {}
+        for file in uploaded_files:
+            color_map[file.name] = st.sidebar.color_picker(f"Color for {file.name}", "#000000")
+
+        fig, ax = plt.subplots(figsize=(8, 6))
+        for i, fname in enumerate(sequence):
+            file = next(f for f in uploaded_files if f.name == fname)
+            df = load_asc_data(file)
+            y_offset = i * offset_value
+            ax.plot(df["Wavenumber (cm-1)"], df["Transmittance (%)"] + y_offset,
+                    label=fname, color=color_map[fname])
+
+        ax.set_xlim(x_max, x_min)  # reverse axis
+        ax.set_ylim(y_min, y_max + offset_value * len(sequence))
+        ax.set_xlabel("Wavenumber (cm⁻¹)", fontsize=axis_title_size, fontname=font_family)
+        ax.set_ylabel("Transmittance + Offset (%)", fontsize=axis_title_size, fontname=font_family)
+        ax.legend(fontsize=tick_size)
+        ax.grid(show_grid)
+        ax.set_title(chart_title, fontsize=title_size, fontname=font_family)
+
+        st.pyplot(fig)
