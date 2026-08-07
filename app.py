@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
-import matplotlib.pyplot as plt
 
 # --- Function to load ASC data ---
 def load_asc_data(uploaded_file):
@@ -44,11 +43,27 @@ line_thickness = st.sidebar.slider("Line Thickness", 1, 6, 2)
 st.sidebar.header("Axis Range")
 x_min = st.sidebar.number_input("X-axis Min (Wavenumber)", value=400.0)
 x_max = st.sidebar.number_input("X-axis Max (Wavenumber)", value=4000.0)
-y_min = st.sidebar.number_input("Y-axis Min (Transmittance)", value=0.0)
-y_max = st.sidebar.number_input("Y-axis Max (Transmittance)", value=100.0)
+y_min = st.sidebar.number_input("Y-axis Min", value=0.0)
+y_max = st.sidebar.number_input("Y-axis Max", value=100.0)
 
-# Toggle for overlapped vs separate plots
-plot_mode = st.sidebar.radio("Plot Mode", ["Overlapped", "Separate", "Stacked (Matplotlib)"])
+# Plot mode
+plot_mode = st.sidebar.radio("Plot Mode", ["Overlapped", "Stacked (Matplotlib style in Plotly)"])
+
+# Stacked settings
+offset_value = 0
+sequence = []
+color_map = {}
+
+if plot_mode == "Stacked (Matplotlib style in Plotly)" and uploaded_files:
+    st.sidebar.header("Stacked Plot Settings")
+    offset_value = st.sidebar.number_input("Vertical Offset (a.u.)", value=5.0, step=1.0)
+    sequence = st.sidebar.multiselect(
+        "Select plotting sequence",
+        options=[f.name for f in uploaded_files],
+        default=[f.name for f in uploaded_files]
+    )
+    for file in uploaded_files:
+        color_map[file.name] = st.sidebar.color_picker(f"Color for {file.name}", "#000000")
 
 st.sidebar.markdown("---")
 st.sidebar.markdown("**Developed by Kushagra, Petchem Lab**")
@@ -57,7 +72,6 @@ st.sidebar.markdown("**Developed by Kushagra, Petchem Lab**")
 if uploaded_files:
     chart_title = st.text_input("Enter chart title", value="FTIR Spectrum")
 
-    # Overlapped Plotly plot
     if plot_mode == "Overlapped":
         fig = go.Figure()
         for file in uploaded_files:
@@ -72,90 +86,42 @@ if uploaded_files:
                 name=custom_name
             ))
 
-        fig.update_layout(
-            title=dict(text=f"<b>{chart_title}</b>", font=dict(size=title_size, family=font_family, color="black")),
-            xaxis=dict(
-                title=dict(text="<b>Wavenumber (cm⁻¹)</b>", font=dict(size=axis_title_size, family=font_family, color="black")),
-                autorange="reversed",
-                range=[x_max, x_min],
-                tickfont=dict(size=tick_size, family=font_family, color="black"),
-                showgrid=show_grid
-            ),
-            yaxis=dict(
-                title=dict(text="<b>Transmittance (%)</b>", font=dict(size=axis_title_size, family=font_family, color="black")),
-                autorange=False,
-                range=[y_min, y_max],
-                tickfont=dict(size=tick_size, family=font_family, color="black"),
-                showgrid=show_grid
-            ),
-            legend=dict(font=dict(size=tick_size, family=font_family, color="black"))
-        )
+        y_label = "<b>Transmittance (%)</b>"
 
-        st.plotly_chart(fig, use_container_width=True)
-
-    # Separate Plotly plots
-    elif plot_mode == "Separate":
-        for file in uploaded_files:
-            custom_name = st.text_input(f"Name for {file.name}", value=file.name)
-            df = load_asc_data(file)
-            fig = go.Figure()
-            fig.add_trace(go.Scatter(
-                x=df["Wavenumber (cm-1)"],
-                y=df["Transmittance (%)"],
-                mode="lines",
-                line=dict(width=line_thickness),
-                name=custom_name
-            ))
-
-            fig.update_layout(
-                title=dict(text=f"<b>{chart_title} - {custom_name}</b>", font=dict(size=title_size, family=font_family, color="black")),
-                xaxis=dict(
-                    title=dict(text="<b>Wavenumber (cm⁻¹)</b>", font=dict(size=axis_title_size, family=font_family, color="black")),
-                    autorange="reversed",
-                    range=[x_max, x_min],
-                    tickfont=dict(size=tick_size, family=font_family, color="black"),
-                    showgrid=show_grid
-                ),
-                yaxis=dict(
-                    title=dict(text="<b>Transmittance (%)</b>", font=dict(size=axis_title_size, family=font_family, color="black")),
-                    autorange=False,
-                    range=[y_min, y_max],
-                    tickfont=dict(size=tick_size, family=font_family, color="black"),
-                    showgrid=show_grid
-                ),
-                legend=dict(font=dict(size=tick_size, family=font_family, color="black"))
-            )
-
-            st.plotly_chart(fig, use_container_width=True)
-
-    # Matplotlib stacked plot
-    else:
-        st.sidebar.header("Stacked Plot Settings")
-        offset_value = st.sidebar.number_input("Vertical Offset (%)", value=5.0, step=1.0)
-        sequence = st.sidebar.multiselect(
-            "Select plotting sequence",
-            options=[f.name for f in uploaded_files],
-            default=[f.name for f in uploaded_files]
-        )
-
-        color_map = {}
-        for file in uploaded_files:
-            color_map[file.name] = st.sidebar.color_picker(f"Color for {file.name}", "#000000")
-
-        fig, ax = plt.subplots(figsize=(8, 6))
+    else:  # Stacked Plotly
+        fig = go.Figure()
         for i, fname in enumerate(sequence):
             file = next(f for f in uploaded_files if f.name == fname)
             df = load_asc_data(file)
             y_offset = i * offset_value
-            ax.plot(df["Wavenumber (cm-1)"], df["Transmittance (%)"] + y_offset,
-                    label=fname, color=color_map[fname])
+            fig.add_trace(go.Scatter(
+                x=df["Wavenumber (cm-1)"],
+                y=df["Transmittance (%)"] + y_offset,
+                mode="lines",
+                line=dict(width=line_thickness, color=color_map[fname]),
+                name=fname
+            ))
 
-        ax.set_xlim(x_max, x_min)  # reverse axis
-        ax.set_ylim(y_min, y_max + offset_value * len(sequence))
-        ax.set_xlabel("Wavenumber (cm⁻¹)", fontsize=axis_title_size, fontname=font_family)
-        ax.set_ylabel("Transmittance + Offset (%)", fontsize=axis_title_size, fontname=font_family)
-        ax.legend(fontsize=tick_size)
-        ax.grid(show_grid)
-        ax.set_title(chart_title, fontsize=title_size, fontname=font_family)
+        y_label = "<b>Transmittance (a.u.)</b>"
 
-        st.pyplot(fig)
+    # Common layout
+    fig.update_layout(
+        title=dict(text=f"<b>{chart_title}</b>", font=dict(size=title_size, family=font_family, color="black")),
+        xaxis=dict(
+            title=dict(text="<b>Wavenumber (cm⁻¹)</b>", font=dict(size=axis_title_size, family=font_family, color="black")),
+            autorange="reversed",
+            range=[x_max, x_min],
+            tickfont=dict(size=tick_size, family=font_family, color="black"),
+            showgrid=show_grid
+        ),
+        yaxis=dict(
+            title=dict(text=y_label, font=dict(size=axis_title_size, family=font_family, color="black")),
+            autorange=False,
+            range=[y_min, y_max + (offset_value * len(sequence) if plot_mode.startswith("Stacked") else 0)],
+            tickfont=dict(size=tick_size, family=font_family, color="black"),
+            showgrid=show_grid
+        ),
+        legend=dict(font=dict(size=tick_size, family=font_family, color="black"))
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
