@@ -87,6 +87,7 @@ if uploaded_files:
             ))
 
         y_label = "<b>Transmittance (%)</b>"
+        show_y_ticks = True
 
     else:  # Stacked Plotly
         fig = go.Figure()
@@ -103,6 +104,7 @@ if uploaded_files:
             ))
 
         y_label = "<b>Transmittance (a.u.)</b>"
+        show_y_ticks = False
 
     # Common layout
     fig.update_layout(
@@ -119,7 +121,8 @@ if uploaded_files:
             autorange=False,
             range=[y_min, y_max + (offset_value * len(sequence) if plot_mode.startswith("Stacked") else 0)],
             tickfont=dict(size=tick_size, family=font_family, color="black"),
-            showgrid=show_grid
+            showgrid=show_grid,
+            showticklabels=show_y_ticks   # ✅ hides numeric ticks in stacked mode
         ),
         legend=dict(font=dict(size=tick_size, family=font_family, color="black"))
     )
