@@ -93,11 +93,11 @@ if uploaded_files:
 
     else:  # Stacked Plotly
         fig = go.Figure()
-        # ✅ Add traces in stacking order, legend follows same order
-        for i, fname in enumerate(sequence):
+        # ✅ Reverse loop so legend matches stacking order
+        for i, fname in enumerate(reversed(sequence)):
             file = next(f for f in uploaded_files if f.name == fname)
             df = load_asc_data(file)
-            y_offset = i * offset_value
+            y_offset = (len(sequence)-1-i) * offset_value
             fig.add_trace(go.Scatter(
                 x=df["Wavenumber (cm-1)"],
                 y=df["Transmittance (%)"] + y_offset,
@@ -129,7 +129,7 @@ if uploaded_files:
         ),
         legend=dict(
             font=dict(size=tick_size, family=font_family, color="black"),
-            traceorder="normal"  # ✅ legend order matches trace order
+            traceorder="normal"  # ✅ legend order follows trace order
         )
     )
 
