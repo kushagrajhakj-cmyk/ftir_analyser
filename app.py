@@ -93,6 +93,7 @@ if uploaded_files:
 
     else:  # Stacked Plotly
         fig = go.Figure()
+        # ✅ Ensure legend follows stacking order
         for i, fname in enumerate(sequence):
             file = next(f for f in uploaded_files if f.name == fname)
             df = load_asc_data(file)
@@ -102,7 +103,7 @@ if uploaded_files:
                 y=df["Transmittance (%)"] + y_offset,
                 mode="lines",
                 line=dict(width=line_thickness, color=color_map[fname]),
-                name=custom_names[fname]  # ✅ use custom name
+                name=custom_names[fname]  # ✅ custom name
             ))
 
         y_label = "<b>Transmittance (a.u.)</b>"
@@ -126,7 +127,10 @@ if uploaded_files:
             showgrid=show_grid,
             showticklabels=show_y_ticks   # ✅ hides numeric ticks in stacked mode
         ),
-        legend=dict(font=dict(size=tick_size, family=font_family, color="black"))
+        legend=dict(
+            font=dict(size=tick_size, family=font_family, color="black"),
+            traceorder="normal"  # ✅ ensures legend order matches trace order (stacking order)
+        )
     )
 
     st.plotly_chart(fig, use_container_width=True)
