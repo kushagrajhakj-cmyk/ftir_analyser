@@ -128,3 +128,9 @@ if uploaded_files:
     )
 
     st.plotly_chart(fig, use_container_width=True)
+
+    # ✅ Add download option for interactive HTML
+    html_file = "ftir_plot.html"
+    fig.write_html(html_file)
+    with open(html_file, "rb") as f:
+        st.download_button("Download Interactive HTML Plot", f, file_name=html_file, mime="text/html")
