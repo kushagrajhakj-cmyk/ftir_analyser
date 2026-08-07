@@ -53,6 +53,7 @@ plot_mode = st.sidebar.radio("Plot Mode", ["Overlapped", "Stacked (Matplotlib st
 offset_value = 0
 sequence = []
 color_map = {}
+custom_names = {}
 
 if plot_mode == "Stacked (Matplotlib style in Plotly)" and uploaded_files:
     st.sidebar.header("Stacked Plot Settings")
@@ -64,6 +65,7 @@ if plot_mode == "Stacked (Matplotlib style in Plotly)" and uploaded_files:
     )
     for file in uploaded_files:
         color_map[file.name] = st.sidebar.color_picker(f"Color for {file.name}", "#000000")
+        custom_names[file.name] = st.sidebar.text_input(f"Custom name for {file.name}", value=file.name)
 
 st.sidebar.markdown("---")
 st.sidebar.markdown("**Developed by Kushagra, Petchem Lab**")
@@ -76,7 +78,7 @@ if uploaded_files:
         fig = go.Figure()
         for file in uploaded_files:
             default_name = file.name
-            custom_name = st.text_input(f"Name for {default_name}", value=default_name)
+            custom_name = st.text_input(f"Custom name for {default_name}", value=default_name)
             df = load_asc_data(file)
             fig.add_trace(go.Scatter(
                 x=df["Wavenumber (cm-1)"],
@@ -100,7 +102,7 @@ if uploaded_files:
                 y=df["Transmittance (%)"] + y_offset,
                 mode="lines",
                 line=dict(width=line_thickness, color=color_map[fname]),
-                name=fname
+                name=custom_names[fname]  # ✅ use custom name
             ))
 
         y_label = "<b>Transmittance (a.u.)</b>"
