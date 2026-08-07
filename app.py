@@ -93,7 +93,7 @@ if uploaded_files:
 
     else:  # Stacked Plotly
         fig = go.Figure()
-        # ✅ Reverse loop so legend matches stacking order
+        # Reverse loop so legend matches stacking order
         for i, fname in enumerate(reversed(sequence)):
             file = next(f for f in uploaded_files if f.name == fname)
             df = load_asc_data(file)
@@ -109,7 +109,7 @@ if uploaded_files:
         y_label = "<b>Transmittance (a.u.)</b>"
         show_y_ticks = False
 
-    # Common layout
+    # Common layout with explicit font sizes
     fig.update_layout(
         title=dict(text=f"<b>{chart_title}</b>", font=dict(size=title_size, family=font_family, color="black")),
         xaxis=dict(
@@ -129,14 +129,14 @@ if uploaded_files:
         ),
         legend=dict(
             font=dict(size=tick_size, family=font_family, color="black"),
-            traceorder="normal"  # ✅ legend order follows trace order
+            traceorder="normal"
         )
     )
 
     st.plotly_chart(fig, use_container_width=True)
 
-    # ✅ Add download option for interactive HTML
+    # ✅ Add download option for interactive HTML with consistent fonts
     html_file = "ftir_plot.html"
-    fig.write_html(html_file)
+    fig.write_html(html_file, include_plotlyjs="cdn", full_html=True)
     with open(html_file, "rb") as f:
         st.download_button("Download Interactive HTML Plot", f, file_name=html_file, mime="text/html")
